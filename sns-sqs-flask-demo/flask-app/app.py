@@ -11,7 +11,36 @@ sqs = boto3.client('sqs', region_name='us-east-1')
 
 topic_arn = 'arn:aws:sns:us-east-1:598330827496:demo-topic.fifo'
 queue_url = 'https://sqs.us-east-1.amazonaws.com/598330827496/do-queue.fifo'
+def check_resources():
+    result = {}
 
+    # 检查 SNS 主题是否存在（尝试获取主题属性）
+    try:
+        resp = sns.get_topic_attributes(TopicArn=topic_arn)
+        result['sns'] = {
+            'exists': True,
+            'attributes': resp['Attributes']
+        }
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NotFound':
+            result['sns'] = {'exists': False, 'error': 'Topic not found'}
+        else:
+            result['sns'] = {'exists': False, 'error': str(e)}
+
+    # 检查 SQS 队列是否存在（尝试获取队列属性）
+    try:
+        resp = sqs.get_queue_attributes(QueueUrl=queue_url, AttributeNames=['All'])
+        result['sqs'] = {
+            'exists': True,
+            'attributes': resp['Attributes']
+        }
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'AWS.SimpleQueueService.NonExistentQueue':
+            result['sqs'] = {'exists': False, 'error': 'Queue does not exist'}
+        else:
+            result['sqs'] = {'exists': False, 'error': str(e)}
+
+    return result
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
     return datetime.fromtimestamp(value).strftime('%Y-%m-%d %H:%M:%S')
