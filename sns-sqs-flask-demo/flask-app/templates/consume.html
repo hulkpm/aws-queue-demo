@@ -8,19 +8,18 @@
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #f0f0f0; }
-        input[type=text] { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 12px; }
         button { padding: 8px 16px; cursor: pointer; }
         .nav { margin-top: 20px; }
         .nav a { margin-right: 15px; }
-        .delete-form { max-width: 400px; margin-top: 30px; }
     </style>
 </head>
 <body>
 
-<h1>Consume and Delete Messages from SQS</h1>
+<h1>Consume SQS Messages</h1>
 
 <div class="nav">
-    <a href="/">Back to Send Page</a>
+    <a href="/">Send Page</a>
+    <a href="/consume">Consume Page</a>
 </div>
 
 <h2>Current Messages in SQS</h2>
@@ -31,7 +30,8 @@
             <th>Message ID</th>
             <th>Message Body</th>
             <th>Receive Time</th>
-            <th>Receipt Handle (for delete)</th>
+            <th>Receive Count</th>
+            <th>Sent Time</th>
         </tr>
     </thead>
     <tbody>
@@ -40,30 +40,24 @@
             <td>{{ msg.MessageId }}</td>
             <td>{{ msg.Body }}</td>
             <td>
-                {% if msg.Attributes and msg.Attributes.ApproximateReceiveTimestamp %}
-                    {{ (msg.Attributes.ApproximateReceiveTimestamp | int / 1000) | datetimeformat }}
-                {% else %}
-                    N/A
-                {% endif %}
+                {% if msg.Attributes.ApproximateFirstReceiveTimestamp %}
+                    {{ (msg.Attributes.ApproximateFirstReceiveTimestamp | int / 1000) | datetimeformat }}
+                {% else %} N/A {% endif %}
             </td>
-            <td style="word-break: break-all;">{{ msg.ReceiptHandle }}</td>
+            <td>{{ msg.Attributes.ApproximateReceiveCount or 'N/A' }}</td>
+            <td>
+                {% if msg.Attributes.SentTimestamp %}
+                    {{ (msg.Attributes.SentTimestamp | int / 1000) | datetimeformat }}
+                {% else %} N/A {% endif %}
+            </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="4" style="text-align:center;">No messages found</td>
+            <td colspan="5" style="text-align:center;">No messages found</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-
-<div class="delete-form">
-    <h3>Delete a Message</h3>
-    <form method="POST" action="/consume/delete">
-        <label for="receipt_handle">Enter Receipt Handle to delete:</label><br>
-        <input type="text" name="receipt_handle" id="receipt_handle" required /><br>
-        <button type="submit">Delete Message</button>
-    </form>
-</div>
 
 </body>
 </html>

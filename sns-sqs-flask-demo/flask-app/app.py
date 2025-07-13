@@ -5,63 +5,70 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-sqs = boto3.client('sqs', region_name='us-east-1')
+# 配置你的 SNS 和 SQS
 sns = boto3.client('sns', region_name='us-east-1')
+sqs = boto3.client('sqs', region_name='us-east-1')
 
-queue_url = "https://sqs.us-east-1.amazonaws.com/598330827496/demo-queue.fifo"
-topic_arn = "arn:aws:sns:us-east-1:598330827496:demo-topic.fifo"
+topic_arn = 'arn:aws:sns:us-east-1:598330827496:demo-topic.fifo'
+queue_url = 'https://sqs.us-east-1.amazonaws.com/598330827496/do-queue.fifo'
 
-# Jinja2过滤器，格式化时间戳
 @app.template_filter('datetimeformat')
 def datetimeformat(value):
     return datetime.fromtimestamp(value).strftime('%Y-%m-%d %H:%M:%S')
 
 @app.route('/')
 def index():
-    # 接收SQS消息，带上时间戳等属性
-    messages_response = sqs.receive_message(
+    messages = []
+
+    response = sqs.receive_message(
         QueueUrl=queue_url,
         MaxNumberOfMessages=10,
-        MessageAttributeNames=['All'],
+        WaitTimeSeconds=1,
         AttributeNames=['All']
     )
-    messages = messages_response.get('Messages', [])
+
+    if 'Messages' in response:
+        messages = response['Messages']
+
     return render_template('index.html', messages=messages)
+
+@app.route('/consume')
+def consume():
+    messages = []
+
+    response = sqs.receive_message(
+        QueueUrl=queue_url,
+        MaxNumberOfMessages=10,
+        WaitTimeSeconds=1,
+        AttributeNames=['All']
+    )
+
+    if 'Messages' in response:
+        messages = response['Messages']
+
+    return render_template('consume.html', messages=messages)
 
 @app.route('/send', methods=['POST'])
 def send():
     msg = request.form['message']
+    print(f"Sending message: {msg}")
     dedup_id = hashlib.sha256(msg.encode()).hexdigest()
-    sns.publish(
+
+    response = sns.publish(
         TopicArn=topic_arn,
         Message=msg,
-        MessageGroupId="default",  # FIFO主题必需
+        MessageGroupId="default",
         MessageDeduplicationId=dedup_id
     )
+    print(response)
     return redirect(url_for('index'))
 
-@app.route('/consume')
-def consume():
-    # 获取SQS消息列表，供页面显示
-    messages_response = sqs.receive_message(
-        QueueUrl=queue_url,
-        MaxNumberOfMessages=10,
-        MessageAttributeNames=['All'],
-        AttributeNames=['All']
-    )
-    messages = messages_response.get('Messages', [])
-    return render_template('consume.html', messages=messages)
-
-@app.route('/consume/delete', methods=['POST'])
-def delete_message():
-    receipt_handle = request.form['receipt_handle']
-    try:
+@app.route('/delete', methods=['POST'])
+def delete():
+    receipt_handle = request.form.get('receipt_handle')
+    if receipt_handle:
         sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
-        msg = 'Message deleted successfully.'
-    except Exception as e:
-        msg = f'Error deleting message: {e}'
-    # 删除完跳回consume页，带提示（这里简单用query参数）
-    return redirect(url_for('consume'))
+    return redirect(url_for('index'))
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0')

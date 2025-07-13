@@ -8,7 +8,7 @@
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #f0f0f0; }
-        input[type=text], textarea { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 12px; }
+        textarea { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 12px; }
         button { padding: 8px 16px; cursor: pointer; }
         .nav { margin-top: 20px; }
         .nav a { margin-right: 15px; }
@@ -25,7 +25,8 @@
 </form>
 
 <div class="nav">
-    <a href="/consume">Go to Consume Page</a>
+    <a href="/">Send Page</a>
+    <a href="/consume">Consume Page</a>
 </div>
 
 <h2>Current Messages in SQS</h2>
@@ -36,6 +37,9 @@
             <th>Message ID</th>
             <th>Message Body</th>
             <th>Receive Time</th>
+            <th>Receive Count</th>
+            <th>Sent Time</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody>
@@ -44,16 +48,26 @@
             <td>{{ msg.MessageId }}</td>
             <td>{{ msg.Body }}</td>
             <td>
-                {% if msg.Attributes and msg.Attributes.ApproximateReceiveTimestamp %}
-                    {{ (msg.Attributes.ApproximateReceiveTimestamp | int / 1000) | datetimeformat }}
-                {% else %}
-                    N/A
-                {% endif %}
+                {% if msg.Attributes.ApproximateFirstReceiveTimestamp %}
+                    {{ (msg.Attributes.ApproximateFirstReceiveTimestamp | int / 1000) | datetimeformat }}
+                {% else %} N/A {% endif %}
+            </td>
+            <td>{{ msg.Attributes.ApproximateReceiveCount or 'N/A' }}</td>
+            <td>
+                {% if msg.Attributes.SentTimestamp %}
+                    {{ (msg.Attributes.SentTimestamp | int / 1000) | datetimeformat }}
+                {% else %} N/A {% endif %}
+            </td>
+            <td>
+                <form method="POST" action="/delete">
+                    <input type="hidden" name="receipt_handle" value="{{ msg.ReceiptHandle }}">
+                    <button type="submit">Delete</button>
+                </form>
             </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="3" style="text-align:center;">No messages found</td>
+            <td colspan="6" style="text-align:center;">No messages found</td>
         </tr>
         {% endfor %}
     </tbody>
