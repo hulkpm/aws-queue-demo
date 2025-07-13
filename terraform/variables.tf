@@ -12,3 +12,5 @@ variable "sqs_queue_arn" {
   type = string
   description = "SQS Queue ARN"
 }
+
+
