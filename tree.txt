@@ -1,0 +1,14 @@
+sns-sqs-flask-demo/
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+├── scripts/
+│   └── ec2-userdata.sh
+├── flask-app/
+│   ├── app.py
+│   ├── requirements.txt
+│   └── templates/
+│       ├── snsgen.html
+│       └── consume.html
+└── README.md

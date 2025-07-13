@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>SNS Send & SQS Messages</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        input[type=text], textarea { width: 100%; padding: 6px; margin-top: 6px; margin-bottom: 12px; }
+        button { padding: 8px 16px; cursor: pointer; }
+        .nav { margin-top: 20px; }
+        .nav a { margin-right: 15px; }
+    </style>
+</head>
+<body>
+
+<h1>Send Message to SNS</h1>
+
+<form method="POST" action="/send">
+    <label for="message">Enter your message:</label><br>
+    <textarea name="message" id="message" rows="3" required></textarea><br>
+    <button type="submit">Send</button>
+</form>
+
+<div class="nav">
+    <a href="/consume">Go to Consume Page</a>
+</div>
+
+<h2>Current Messages in SQS</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Message ID</th>
+            <th>Message Body</th>
+            <th>Receive Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for msg in messages %}
+        <tr>
+            <td>{{ msg.MessageId }}</td>
+            <td>{{ msg.Body }}</td>
+            <td>
+                {% if msg.Attributes and msg.Attributes.ApproximateReceiveTimestamp %}
+                    {{ (msg.Attributes.ApproximateReceiveTimestamp | int / 1000) | datetimeformat }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3" style="text-align:center;">No messages found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>
