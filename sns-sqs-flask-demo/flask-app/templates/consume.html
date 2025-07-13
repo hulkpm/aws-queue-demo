@@ -17,6 +17,10 @@
 
 <h1>Consume SQS Messages</h1>
 
+{% if error %}
+<div style="color: red; margin: 10px 0;">{{ error }}</div>
+{% endif %}
+
 <div class="nav">
     <a href="/">Send Page</a>
     <a href="/consume">Consume Page</a>
