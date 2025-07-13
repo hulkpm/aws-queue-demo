@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Replace with your own
 topic_arn = 'arn:aws:sns:us-east-1:598330827496:demo-topic.fifo'
-queue_url = 'https://sqs.us-east-1.amazonaws.com/598330827496/do-queue.fifo'
+queue_url = 'https://sqs.us-east-1.amazonaws.com/598330827496/demo-queue.fifo'
 
 sns = boto3.client('sns', region_name='us-east-1')
 sqs = boto3.client('sqs', region_name='us-east-1')
