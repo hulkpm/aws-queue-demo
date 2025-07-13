@@ -19,6 +19,7 @@ def datetimeformat(value):
 
 @app.route('/')
 def index():
+    deleted = request.args.get('deleted')  # ← 添加这行
     try:
         response = sqs.receive_message(
             QueueUrl=queue_url,
@@ -66,6 +67,22 @@ def consume():
         return render_template('consume.html', messages=messages, error=error)
 
     return render_template('consume.html', messages=messages)
+@app.route('/delete', methods=['POST'])
+def delete_message():
+    receipt_handle = request.form.get('receipt_handle')
+    if not receipt_handle:
+        return "Missing receipt handle", 400
+
+    try:
+        sqs.delete_message(
+            QueueUrl=queue_url,
+            ReceiptHandle=receipt_handle
+        )
+    except Exception as e:
+        return f"Error deleting message: {str(e)}", 500
+
+    return redirect(url_for('index', deleted='1'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

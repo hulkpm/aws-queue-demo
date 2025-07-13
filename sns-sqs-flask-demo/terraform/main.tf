@@ -17,32 +17,30 @@ resource "aws_sqs_queue" "demo_queue" {
 
 resource "aws_sqs_queue_policy" "demo_queue_policy" {
   queue_url = aws_sqs_queue.demo_queue.url
-  policy    = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "sns.amazonaws.com"
-            },
-            "Action": "SQS:SendMessage",
-            "Resource": "",
-            "Condition": {
-                "ArnEquals": {
-                    "aws:SourceArn": ""
-                }
-            }
-        }
-    ]
-}
-POLICY
+policy = jsonencode({
+  Version = "2012-10-17",
+  Statement = [{
+    Effect = "Allow",
+    Principal = {
+      Service = "sns.amazonaws.com"
+    },
+    Action = "SQS:SendMessage",
+    Resource = var.sqs_queue_arn,
+    Condition = {
+      ArnEquals = {
+        "aws:SourceArn" = var.sns_topic_arn
+      }
+    }
+  }]
+})
+
 }
 
 resource "aws_sns_topic_subscription" "demo_topic_subscription" {
   topic_arn = aws_sns_topic.demo_topic.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.demo_queue.arn
+  raw_message_delivery  = true  # 必须加这个对 FIFO queue
 }
 
 output "sns_topic_arn" {
@@ -51,4 +49,7 @@ output "sns_topic_arn" {
 
 output "sqs_queue_url" {
   value = aws_sqs_queue.demo_queue.url
+}
+output "sqs_queue_arn" {
+  value = aws_sqs_queue.demo_queue.arn
 }

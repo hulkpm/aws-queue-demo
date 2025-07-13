@@ -20,6 +20,11 @@
 {% if error %}
 <div style="color: red; margin: 10px 0;">{{ error }}</div>
 {% endif %}
+
+{% if deleted %}
+<div style="color: green; margin: 10px 0;">Message deleted successfully.</div>
+{% endif %}
+
 <form method="POST" action="/send">
     <label for="message">Enter your message:</label><br>
     <textarea name="message" id="message" rows="3" required></textarea><br>
