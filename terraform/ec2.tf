@@ -39,82 +39,26 @@ resource "aws_instance" "flask_ec2" {
 
   user_data = <<EOF
 #!/bin/bash
-echo "Setting up Flask App..."
+echo "Setting up Flask App....."
 yum update -y
 yum install -y python3 git
 pip3 install flask boto3
 
-设置密码登录（慎用，仅限测试）
+# 克隆你的 GitHub 项目
+cd /home/ec2-user
+git clone https://github.com/hulkpm/aws-queue-demo.git
+
+#设置密码登录（慎用，仅限测试）
 echo 'ec2-user:wozaila' | chpasswd
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config || echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
 systemctl restart sshd
 
-# 创建 Flask App
-mkdir /home/ec2-user/flask-app
-cd /home/ec2-user/flask-app
-
-cat > app.py <<PYEOF
-from flask import Flask, render_template, request
-import boto3
-
-app = Flask(__name__)
-sqs = boto3.client('sqs', region_name='us-east-1')
-sns = boto3.client('sns', region_name='us-east-1')
-
-queue_url = "${var.sqs_queue_url}"
-topic_arn = "${var.sns_topic_arn}"
-
-@app.route('/')
-def index():
-    messages = sqs.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=10)
-    return render_template('snsgen.html', messages=messages.get('Messages', []))
-
-@app.route('/send', methods=['POST'])
-def send():
-    msg = request.form['message']
-    sns.publish(TopicArn=topic_arn, Message=msg)
-    return 'Message sent'
-
-@app.route('/consume', methods=['POST'])
-def consume():
-    receipt = request.form['receipt_handle']
-    sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt)
-    return 'Message deleted'
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
-PYEOF
-
-mkdir templates
-cat > templates/snsgen.html <<HTEOF
-<!DOCTYPE html>
-<html>
-<head><title>SNS Message Generator</title></head>
-<body>
-    <h1>Send Message</h1>
-    <form method="POST" action="/send">
-        <textarea name="message" rows="4" cols="50"></textarea><br>
-        <button type="submit">Send</button>
-    </form>
-
-    <h2>Messages in SQS</h2>
-    <ul>
-    {% for msg in messages %}
-        <li>{{ msg.Body }}
-            <form action="/consume" method="POST">
-                <input type="hidden" name="receipt_handle" value="{{ msg.ReceiptHandle }}">
-                <button type="submit">Consume</button>
-            </form>
-        </li>
-    {% endfor %}
-    </ul>
-</body>
-</html>
-HTEOF
-
-python3 app.py &
+# 启动 Flask（注意权限和路径）
+cd /home/ec2-user/aws-queue-demo/flask-app
+nohup python3 app.py > /home/ec2-user/flask.log 2>&1 &
 EOF
+
 
   tags = {
     Name = "FlaskAppEC2"
@@ -123,4 +67,8 @@ EOF
 
 output "ec2_public_ip" {
   value = aws_instance.flask_ec2.public_ip
+}
+# 👇 新增拼接输出：Flask App 访问地址
+output "demo_url" {
+  value = "http://${aws_instance.flask_ec2.public_ip}:5000"
 }
