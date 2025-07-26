@@ -26,6 +26,7 @@ def index():
             MaxNumberOfMessages=10,
             WaitTimeSeconds=1,
             AttributeNames=['All']
+            MessageAttributeNames=['All'] 
         )
         messages = response.get('Messages', [])
     except Exception as e:

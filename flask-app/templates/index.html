@@ -43,6 +43,7 @@
         <tr>
             <th>Message ID</th>
             <th>Message Body</th>
+            <th>Group ID</th>  <!-- 新增 -->
             <th>Receive Time</th>
             <th>Receive Count</th>
             <th>Sent Time</th>
@@ -54,6 +55,11 @@
         <tr>
             <td>{{ msg.MessageId }}</td>
             <td>{{ msg.Body }}</td>
+            <td>
+                {% if msg.Attributes.MessageGroupId %}
+                    {{ msg.Attributes.MessageGroupId }}
+                {% else %} N/A {% endif %}
+            </td>
             <td>
                 {% if msg.Attributes.ApproximateFirstReceiveTimestamp %}
                     {{ (msg.Attributes.ApproximateFirstReceiveTimestamp | int / 1000) | datetimeformat }}
