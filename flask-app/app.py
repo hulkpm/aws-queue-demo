@@ -25,7 +25,7 @@ def index():
             QueueUrl=queue_url,
             MaxNumberOfMessages=10,
             WaitTimeSeconds=1,
-            AttributeNames=['All']
+            AttributeNames=['All'],
             MessageAttributeNames=['All'] 
         )
         messages = response.get('Messages', [])
