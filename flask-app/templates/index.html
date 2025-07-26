@@ -27,9 +27,14 @@
 
 <form method="POST" action="/send">
     <label for="message">Enter your message:</label><br>
-    <textarea name="message" id="message" rows="3" required></textarea><br>
+    <textarea name="message" id="message" rows="3" required></textarea><br><br>
+
+    <label for="group_id">Group ID:</label><br>
+    <input type="text" id="group_id" name="group_id" value="default" required><br><br>
+
     <button type="submit">Send</button>
 </form>
+
 
 <div class="nav">
     <a href="/">Send Page</a>

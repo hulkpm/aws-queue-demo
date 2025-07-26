@@ -40,11 +40,12 @@ def index():
 def send():
     msg = request.form['message']
     dedup_id = hashlib.sha256(msg.encode()).hexdigest()
+    group_id = request.form.get('group_id', 'default')  # 默认值 fallback
     try:
         sns.publish(
             TopicArn=topic_arn,
             Message=msg,
-            MessageGroupId="default",
+            MessageGroupId=group_id,
             MessageDeduplicationId=dedup_id
         )
     except Exception as e:
