@@ -55,8 +55,6 @@ def send():
 
 @app.route('/consume')
 def consume():
-    @app.route('/consume')
-def consume():
     selected_group_id = request.args.get('group_id')  # ✅ 获取筛选参数
     error = None
 
