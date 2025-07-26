@@ -66,7 +66,10 @@ def consume():
     except Exception as e:
         messages = []
         error = f"Queue error: {str(e)}"
-        return render_template('consume.html', messages=messages, error=error)
+        return render_template('consume.html', messages=messages, 
+                                               group_ids=group_ids,
+                                               selected_group_id=selected_group_id,
+                                               error=error)
 
     return render_template('consume.html', messages=messages)
 @app.route('/delete', methods=['POST'])
