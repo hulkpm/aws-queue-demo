@@ -55,6 +55,11 @@ def send():
 
 @app.route('/consume')
 def consume():
+    @app.route('/consume')
+def consume():
+    selected_group_id = request.args.get('group_id')  # ✅ 获取筛选参数
+    error = None
+
     try:
         response = sqs.receive_message(
             QueueUrl=queue_url,
@@ -66,12 +71,44 @@ def consume():
     except Exception as e:
         messages = []
         error = f"Queue error: {str(e)}"
-        return render_template('consume.html', messages=messages, 
-                                               group_ids=group_ids,
-                                               selected_group_id=selected_group_id,
-                                               error=error)
 
-    return render_template('consume.html', messages=messages)
+    # ✅ 提取所有 Group ID
+    group_ids = sorted(set(
+        msg['Attributes'].get('MessageGroupId', 'N/A')
+        for msg in messages if 'Attributes' in msg
+    ))
+
+    # ✅ 按 Group ID 过滤
+    if selected_group_id:
+        messages = [
+            msg for msg in messages
+            if msg['Attributes'].get('MessageGroupId') == selected_group_id
+        ]
+
+    # ✅ 返回完整参数给模板
+    return render_template('consume.html',
+                           messages=messages,
+                           group_ids=group_ids,
+                           selected_group_id=selected_group_id,
+                           error=error)
+
+    # try:
+    #     response = sqs.receive_message(
+    #         QueueUrl=queue_url,
+    #         MaxNumberOfMessages=10,
+    #         WaitTimeSeconds=1,
+    #         AttributeNames=['All']
+    #     )
+    #     messages = response.get('Messages', [])
+    # except Exception as e:
+    #     messages = []
+    #     error = f"Queue error: {str(e)}"
+    #     return render_template('consume.html', messages=messages, 
+    #                                            group_ids=group_ids,
+    #                                            selected_group_id=selected_group_id,
+    #                                            error=error)
+
+    # return render_template('consume.html', messages=messages)
 @app.route('/delete', methods=['POST'])
 def delete_message():
     receipt_handle = request.form.get('receipt_handle')

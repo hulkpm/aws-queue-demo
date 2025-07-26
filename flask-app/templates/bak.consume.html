@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -27,7 +27,6 @@
 </div>
 
 <h2>Current Messages in SQS</h2>
-
 <!-- ✅ Group ID 筛选下拉框（表格右上角） -->
 <div style="text-align: right;">
     <form method="GET" action="/consume">
@@ -42,7 +41,6 @@
     </form>
 </div>
 <!-- ✅ 结束：Group ID 筛选下拉框 -->
-
 <table>
     <thead>
         <tr>
@@ -51,7 +49,6 @@
             <th>Receive Time</th>
             <th>Receive Count</th>
             <th>Sent Time</th>
-            <th>Group ID</th> <!-- ✅ 新增：表头显示 Group ID -->
         </tr>
     </thead>
     <tbody>
@@ -70,15 +67,10 @@
                     {{ (msg.Attributes.SentTimestamp | int / 1000) | datetimeformat }}
                 {% else %} N/A {% endif %}
             </td>
-            <td>
-                {% if msg.Attributes.MessageGroupId %}
-                    {{ msg.Attributes.MessageGroupId }}
-                {% else %} N/A {% endif %}
-            </td> <!-- ✅ 新增：显示每条消息的 Group ID -->
         </tr>
         {% else %}
         <tr>
-            <td colspan="6" style="text-align:center;">No messages found</td> <!-- ✅ 更新 colspan 为6 -->
+            <td colspan="5" style="text-align:center;">No messages found</td>
         </tr>
         {% endfor %}
     </tbody>
